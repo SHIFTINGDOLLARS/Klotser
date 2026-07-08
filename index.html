@@ -249,6 +249,9 @@
         <canvas id="preview" width="76" height="76"></canvas>
         <div id="preview-meta"></div>
         <button id="btn-invert" style="margin-left:auto;">Invert</button>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;white-space:nowrap;">
+          <input type="checkbox" id="chk-height-limit-launcher"> Limit Height
+        </label>
       </div>
       <div class="launch-row">
         <button id="btn-sample">Generate sample map</button>
@@ -335,6 +338,9 @@
         <button id="btn-resume" class="primary">RESUME ►</button>
         <button id="btn-export">Export heightmap PNG</button>
         <button id="btn-invert-live">Invert heightmap</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;margin-top:6px;">
+          <input type="checkbox" id="chk-height-limit-pause"> Limit Height
+        </label>
         <button id="btn-quit">New image</button>
       </div>
       <div class="theme-row">
@@ -533,6 +539,10 @@
         <label>Field of View <span id="set-fov-val">75</span> <input type="range" id="set-fov" min="30" max="140" value="75"></label>
         <div class="settings-hint">camera.fov - lower feels zoomed in, higher feels like a fisheye lens</div>
       </div>
+      <div class="settings-row">
+        <button id="set-bounds">Remove Invisible Walls</button>
+        <div class="settings-hint">boundsEnabled - lets you walk past the edge of the map</div>
+      </div>
       <div class="settings-row btn-row">
         <button id="set-delete-blocks">Delete All Shapes</button>
         <button id="set-delete-creatures">Delete All Creatures</button>
@@ -655,6 +665,8 @@ const EYE=1.7, PR=0.45; // PR = player radius
 let GRAV=30, JUMP=11, SPEED=9, FLY_SPEED=16;
 let worldSpeed=1;
 let creaturesFrozen=false;
+let boundsEnabled=true;
+let heightLimitOn=false;
 const keys={};
 let mouseDown=false, lastSpawn=0, shake=0;
 const props=[];       // shapes + debris
@@ -901,7 +913,8 @@ function applyBrush(wx,wz,radiusCells,delta){
       if(d>r) continue;
       const fall=0.5+0.5*Math.cos(Math.PI*d/r);
       const i=gz*GW+gx;
-      heights[i]=Math.max(0, heights[i]+delta*fall); // no upper limit - build to the sky
+      const raised=heights[i]+delta*fall;
+      heights[i]=heightLimitOn ? clamp(raised,0,HEIGHT_SCALE) : Math.max(0,raised);
     }
   }
   refreshTerrain();
@@ -1164,6 +1177,7 @@ function openSettingsEditor(block){
   $("#set-sky-cycle").textContent="Cycle Sky Colors: "+(skyCycling?"ON":"OFF");
   $("#set-fov").value=camera?camera.fov:75;
   $("#set-fov-val").textContent=camera?Math.round(camera.fov):75;
+  $("#set-bounds").textContent=boundsEnabled?"Remove Invisible Walls":"Restore Invisible Walls";
   freeMouse=true;
   if(locked) document.exitPointerLock();
   skriptEditorOpen=true;
@@ -2205,6 +2219,13 @@ $("#btn-invert-live").addEventListener("click", ()=>{
   refreshTerrain();
   toast("Heightmap inverted");
 });
+function setHeightLimit(on){
+  heightLimitOn=on;
+  $("#chk-height-limit-launcher").checked=on;
+  $("#chk-height-limit-pause").checked=on;
+}
+$("#chk-height-limit-launcher").addEventListener("change",e=>setHeightLimit(e.target.checked));
+$("#chk-height-limit-pause").addEventListener("change",e=>setHeightLimit(e.target.checked));
 $("#skript-run").addEventListener("click",()=>{
   if(!editingBlock) return;
   editingBlock.code=$("#skript-code").value;
@@ -2310,6 +2331,11 @@ $("#set-fov").addEventListener("input",e=>{
   $("#set-fov-val").textContent=v;
   if(camera){ camera.fov=v; camera.updateProjectionMatrix(); }
 });
+$("#set-bounds").addEventListener("click",()=>{
+  boundsEnabled=!boundsEnabled;
+  $("#set-bounds").textContent=boundsEnabled?"Remove Invisible Walls":"Restore Invisible Walls";
+  toast(boundsEnabled?"Walls restored":"Walls removed");
+});
 document.querySelectorAll(".theme-btn[data-theme]").forEach(b=>{
   b.addEventListener("click",()=>{ applyTheme(b.dataset.theme); toast(b.dataset.theme.toUpperCase()+" theme"); });
 });
@@ -2403,9 +2429,11 @@ function tick(now){
       ridePlayerCreatures();
       if(wasGrappling && player.onGround){ sndGrappleLand(); wasGrappling=false; }
     }
-    const bx=(GW-1)*CELL/2-0.5, bz=(GH-1)*CELL/2-0.5;
-    player.pos.x=clamp(player.pos.x,-bx,bx);
-    player.pos.z=clamp(player.pos.z,-bz,bz);
+    if(boundsEnabled){
+      const bx=(GW-1)*CELL/2-0.5, bz=(GH-1)*CELL/2-0.5;
+      player.pos.x=clamp(player.pos.x,-bx,bx);
+      player.pos.z=clamp(player.pos.z,-bz,bz);
+    }
 
     if(mouseDown&&locked){
       if(tool==="create"||tool==="destroy"){
