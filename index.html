@@ -64,7 +64,7 @@
   #launcher .win{width:min(560px,94vw);}
   #launcher .body{padding:16px;display:flex;flex-direction:column;align-items:center;}
   #brandbox{width:100%;padding:14px 10px 10px;text-align:center;background:#fff;}
-  #brandbox .big-k{width:clamp(110px,18vmin,190px);height:auto;filter:drop-shadow(0 8px 20px rgba(255,106,0,.28));}
+  #brandbox .big-k{width:clamp(110px,18vmin,190px);height:auto;/* filter:drop-shadow(0 8px 20px rgba(255,106,0,.28)); */}
   #brandbox .wordmark{font-size:20px;margin-top:2px;color:#111;}
   #brandbox .tag{font-size:11px;color:#555;margin-top:8px;}
   #brandbox .tag .hot{color:#D40000;font-weight:700;}
@@ -186,6 +186,22 @@
     transform:skewX(-4deg);}
   .credits-list{font-size:12px;color:#333;margin-top:4px;}
 
+  .tk-txt{font-size:15px;vertical-align:-2px;}
+  #settings-editor{position:fixed;inset:0;z-index:37;display:none;align-items:center;justify-content:center;
+    background:rgba(20,40,40,.5);}
+  #settings-editor.on{display:flex;}
+  .settings-body{padding:14px 16px;max-height:75vh;overflow-y:auto;}
+  .settings-row{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #DDD;}
+  .settings-row:last-of-type{border-bottom:none;}
+  .settings-row label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;flex-wrap:wrap;}
+  .settings-row input[type=range]{flex:1;min-width:100px;}
+  .settings-row select{font-family:inherit;font-size:12px;padding:3px 6px;}
+  .settings-row input[type=color]{width:44px;height:26px;padding:0;border:2px solid;
+    border-color:var(--face-lo) var(--face-hi) var(--face-hi) var(--face-lo);cursor:pointer;}
+  .settings-hint{font-size:10px;color:#888;font-family:"Courier New",monospace;margin-top:4px;}
+  .settings-row.btn-row{display:flex;gap:8px;border-bottom:none;}
+  .settings-row.btn-row button{flex:1;}
+
   #note-editor{position:fixed;inset:0;z-index:36;display:none;align-items:center;justify-content:center;
     background:rgba(20,40,40,.5);}
   #note-editor.on{display:flex;}
@@ -232,6 +248,7 @@
       <div id="preview-wrap" class="bevel">
         <canvas id="preview" width="76" height="76"></canvas>
         <div id="preview-meta"></div>
+        <button id="btn-invert" style="margin-left:auto;">Invert</button>
       </div>
       <div class="launch-row">
         <button id="btn-sample">Generate sample map</button>
@@ -317,6 +334,7 @@
       <div class="stack">
         <button id="btn-resume" class="primary">RESUME ►</button>
         <button id="btn-export">Export heightmap PNG</button>
+        <button id="btn-invert-live">Invert heightmap</button>
         <button id="btn-quit">New image</button>
       </div>
       <div class="theme-row">
@@ -388,7 +406,8 @@
       <div style="font-size:11.5px;color:#444;line-height:1.7;">All rights reserved.<br><br>
       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.<br>
       THE KLOTSER TEAM IS NOT RESPONSIBLE FOR ANY DAMAGE,<br>
-      DATA LOSS, OR BROWSER CRASHES CAUSED BY USE OF THIS SOFTWARE.</div>
+      DATA LOSS, OR BROWSER CRASHES CAUSED BY USE OF THIS SOFTWARE.<br><br>
+      KLOTSER is not responsible for any damage to your machine or personhood.</div>
       <button id="legal-close" class="primary" style="margin-top:16px;width:100%;">Close</button>
     </div>
   </div>
@@ -442,6 +461,88 @@
         <div class="credits-main">Josh and Philo</div>
         <div class="credits-heading">With help from</div>
         <div class="credits-list">Dankm8 &middot; Weeglem &middot; Cranberrywine &middot; Seb</div>
+        <div style="margin-top:14px;"><a href="https://discord.gg/FrdM9D2nAQ" target="_blank" rel="noopener" style="color:#5865F2;font-weight:700;font-size:12px;text-decoration:none;">Join our Discord →</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="settings-editor">
+  <div class="win bevel" style="width:min(520px,95vw);">
+    <div class="titlebar"><span class="tk-txt">⚙</span> WORLD SETTINGS
+      <span class="spacer"></span><span class="fakebtn" id="settings-x">✕</span></div>
+    <div class="settings-body">
+      <div class="settings-row">
+        <button id="set-freeze">Freeze Animals</button>
+        <div class="settings-hint">creaturesFrozen = true / false</div>
+      </div>
+      <div class="settings-row">
+        <label>Sky Color <input type="color" id="set-sky" value="#cccccc"></label>
+        <div class="settings-hint">scene.background = new THREE.Color(...)</div>
+      </div>
+      <div class="settings-row">
+        <label>Map Theme
+          <select id="set-theme">
+            <option value="bland">Bland</option>
+            <option value="sand">Sand</option>
+            <option value="land">Land</option>
+            <option value="grand">Grand</option>
+            <option value="rand">Rand</option>
+            <option value="scand">Scand</option>
+            <option value="brand">Brand</option>
+            <option value="zealand">Zealand</option>
+          </select>
+        </label>
+        <div class="settings-hint">applyTheme('name')</div>
+      </div>
+      <div class="settings-row">
+        <label>Fog Distance <span id="set-fog-val">260</span> <input type="range" id="set-fog" min="60" max="600" value="260"></label>
+        <div class="settings-hint">scene.fog.far = value</div>
+      </div>
+      <div class="settings-row">
+        <label>Gravity <span id="set-grav-val">30</span> <input type="range" id="set-grav" min="0" max="80" value="30"></label>
+        <div class="settings-hint">GRAV is the downward acceleration every falling thing uses each frame</div>
+      </div>
+      <div class="settings-row">
+        <label>World Speed <span id="set-speed-val">1.0</span>x <input type="range" id="set-speed" min="0" max="4" value="1" step="0.1"></label>
+        <div class="settings-hint">worldSpeed multiplies delta-time for creatures and physics, not your own movement</div>
+      </div>
+      <div class="settings-row">
+        <label>Time of Day <span id="set-time-val">12:00</span> <input type="range" id="set-time" min="0" max="24" value="12" step="0.25"></label>
+        <div class="settings-hint">rotates the sun's position and dims the lights for night</div>
+      </div>
+      <div class="settings-row">
+        <label>Water Level <span id="set-water-val">42</span>% <input type="range" id="set-water" min="0" max="100" value="42"></label>
+        <div class="settings-hint">WATER_Y_FRAC - fraction of max terrain height</div>
+      </div>
+      <div class="settings-row">
+        <label>Default Brush Size <span id="set-brush-size-val">5</span> <input type="range" id="set-brush-size" min="1" max="16" value="5"></label>
+        <label style="margin-top:6px;">Default Strength <span id="set-brush-str-val">40</span> <input type="range" id="set-brush-str" min="5" max="100" value="40"></label>
+        <div class="settings-hint">sets brushSize / brushStr - the same numbers the TOOL.CFG sliders control</div>
+      </div>
+      <div class="settings-row">
+        <label>Player Speed <span id="set-pspeed-val">9</span> <input type="range" id="set-pspeed" min="2" max="30" value="9"></label>
+        <label style="margin-top:6px;">Jump Height <span id="set-jump-val">11</span> <input type="range" id="set-jump" min="0" max="30" value="11"></label>
+        <div class="settings-hint">SPEED and JUMP - your own movement constants</div>
+      </div>
+      <div class="settings-row">
+        <button id="set-sky-cycle">Cycle Sky Colors: OFF</button>
+        <div class="settings-hint">rotates scene.background hue over time instead of a fixed color</div>
+      </div>
+      <div class="settings-row">
+        <label>Field of View <span id="set-fov-val">75</span> <input type="range" id="set-fov" min="30" max="140" value="75"></label>
+        <div class="settings-hint">camera.fov - lower feels zoomed in, higher feels like a fisheye lens</div>
+      </div>
+      <div class="settings-row btn-row">
+        <button id="set-delete-blocks">Delete All Shapes</button>
+        <button id="set-delete-creatures">Delete All Creatures</button>
+      </div>
+      <div class="settings-row">
+        <button id="set-delete-self" style="width:100%;background:#8B1A1A;color:#fff;">Delete This Block</button>
+        <div class="settings-hint">the only way to remove a World Settings block - Popper won't touch it</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button id="settings-close" class="primary" style="width:100%;">Close</button>
       </div>
     </div>
   </div>
@@ -545,12 +646,15 @@ const VARIANTS = {
   bomb:[{id:"blast",name:"Blast"},{id:"explode",name:"Explode"},{id:"implode",name:"Implode"}],
   popper:[{id:"single",name:"Single"},{id:"rapid",name:"Rapid"}],
   mobil:[{id:"jumper",name:"Jumper"},{id:"grapple",name:"Grapple"},{id:"leash",name:"Leash"},{id:"path",name:"Path"}],
-  skript:[{id:"cmdblock",name:"Command"},{id:"repeatblock",name:"Repeater"},{id:"trigger",name:"Trigger"},{id:"noteblock",name:"Noteblock"}],
+  skript:[{id:"cmdblock",name:"Command"},{id:"repeatblock",name:"Repeater"},{id:"trigger",name:"Trigger"},{id:"noteblock",name:"Noteblock"},{id:"worldsettings",name:"World Settings"}],
 };
 let variantIdx = { shapes:0, spawn:0, bomb:0, mobil:0, skript:0, popper:0 };
 
 const player = { pos:new THREE.Vector3(), vel:new THREE.Vector3(), yaw:0, pitch:0, onGround:false };
-const EYE=1.7, GRAV=30, JUMP=11, SPEED=9, FLY_SPEED=16, PR=0.45; // PR = player radius
+const EYE=1.7, PR=0.45; // PR = player radius
+let GRAV=30, JUMP=11, SPEED=9, FLY_SPEED=16;
+let worldSpeed=1;
+let creaturesFrozen=false;
 const keys={};
 let mouseDown=false, lastSpawn=0, shake=0;
 const props=[];       // shapes + debris
@@ -640,6 +744,13 @@ function showPreview(){
   $("#btn-launch").disabled=false;
 }
 $("#btn-launch").addEventListener("click", ()=>{ if(pendingImage) startGame(); });
+$("#btn-invert").addEventListener("click", ()=>{
+  if(!pendingImage) return;
+  const d=pendingImage.data;
+  for(let i=0;i<d.length;i++) d[i]=1-d[i];
+  showPreview();
+  toast("Heightmap inverted");
+});
 $("#btn-credits").addEventListener("click", ()=>$("#credits").classList.add("on"));
 $("#credits-x").addEventListener("click", ()=>$("#credits").classList.remove("on"));
 $("#credits").addEventListener("click", e=>{ if(e.target.id==="credits") $("#credits").classList.remove("on"); });
@@ -800,6 +911,7 @@ function applyBrush(wx,wz,radiusCells,delta){
    SCENE
 ========================================================= */
 let aaOn=false;
+let sunLight=null, hemiLight=null;
 function initThree(){
   renderer=new THREE.WebGLRenderer({canvas:$("#three"),antialias:aaOn});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -808,10 +920,11 @@ function initThree(){
   scene.background=new THREE.Color(THEMES[currentTheme].sky);
   scene.fog=new THREE.Fog(THEMES[currentTheme].sky, THEMES[currentTheme].fogNear, THEMES[currentTheme].fogFar);
   camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,500);
-  scene.add(new THREE.HemisphereLight(0xFFF2DC,0x584A33,0.85));
-  const sun=new THREE.DirectionalLight(0xFFE0B8,0.9);
-  sun.position.set(60,90,30);
-  scene.add(sun);
+  hemiLight=new THREE.HemisphereLight(0xFFF2DC,0x584A33,0.85);
+  scene.add(hemiLight);
+  sunLight=new THREE.DirectionalLight(0xFFE0B8,0.9);
+  sunLight.position.set(60,90,30);
+  scene.add(sunLight);
   addEventListener("resize",()=>{
     camera.aspect=innerWidth/innerHeight;
     camera.updateProjectionMatrix();
@@ -820,7 +933,23 @@ function initThree(){
 }
 
 let waterMesh=null, waterOn=false;
-const WATER_Y_FRAC=0.42;
+let WATER_Y_FRAC=0.42;
+let timeOfDay=12;
+let skyCycling=false, skyCycleHue=0;
+function updateTimeLabel(){
+  const h=Math.floor(timeOfDay), m=Math.round((timeOfDay-h)*60);
+  $("#set-time-val").textContent=String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+}
+function setTimeOfDay(hour){
+  timeOfDay=hour;
+  if(!sunLight||!hemiLight) return;
+  const angle=(hour/24)*Math.PI*2-Math.PI/2;
+  const dist=100;
+  sunLight.position.set(Math.cos(angle)*dist, Math.max(4,Math.sin(angle)*dist), 30);
+  const daylight=clamp(Math.sin(angle),0,1);
+  sunLight.intensity=0.15+daylight*0.85;
+  hemiLight.intensity=0.25+daylight*0.65;
+}
 function waterLevel(){ return HEIGHT_SCALE*WATER_Y_FRAC; }
 function ensureWaterMesh(){
   if(waterMesh) return;
@@ -871,6 +1000,16 @@ function placeSkriptBlock(kind,point){
     top.position.y=size*0.37;
     mesh.add(top);
     radius=size*0.75;
+  } else if(kind==="worldsettings"){
+    const size=0.55*scale;
+    const geo=new THREE.SphereGeometry(size,16,12);
+    const matW=new THREE.MeshStandardMaterial({color:0x3B6FD1,emissive:0x1B3A6B,emissiveIntensity:0.4,flatShading:true,roughness:.4,metalness:.3});
+    mesh=new THREE.Mesh(geo,matW);
+    const ringGeo=new THREE.TorusGeometry(size*1.6,size*0.09,8,24);
+    const ring=new THREE.Mesh(ringGeo,new THREE.MeshStandardMaterial({color:0xFFD23F,flatShading:true,metalness:.6,roughness:.3}));
+    ring.rotation.x=Math.PI/2.3;
+    mesh.add(ring);
+    radius=size*1.75;
   } else {
     const size=0.7*scale;
     const geo=new THREE.BoxGeometry(size,size,size);
@@ -881,13 +1020,14 @@ function placeSkriptBlock(kind,point){
   }
   mesh.position.set(point.x, sampleHeight(point.x,point.z)+radius, point.z);
   const p={mesh,kind,radius,static:true,vel:new THREE.Vector3(),ang:new THREE.Vector3(),
-    code:"",interval:3,timer:3,triggered:false,note:60,cooldown:0};
+    code:"",interval:3,timer:3,triggered:false,note:60,cooldown:0,indestructible:kind==="worldsettings"};
   scene.add(mesh); props.push(p);
+  if(kind==="worldsettings") p.mesh.userData.spin=true;
   return p;
 }
 function pickSkriptBlock(){
   raycaster.setFromCamera(CENTER,camera);
-  const candidates=props.filter(p=>p.kind==="cmdblock"||p.kind==="repeatblock"||p.kind==="trigger"||p.kind==="noteblock").map(p=>p.mesh);
+  const candidates=props.filter(p=>p.kind==="cmdblock"||p.kind==="repeatblock"||p.kind==="trigger"||p.kind==="noteblock"||p.kind==="worldsettings").map(p=>p.mesh);
   if(!candidates.length) return null;
   const hits=raycaster.intersectObjects(candidates,true);
   if(!hits.length) return null;
@@ -898,7 +1038,9 @@ function pickSkriptBlock(){
 function stepSkriptBlocks(dt){
   const now=performance.now();
   for(const p of props){
-    if(p.kind==="repeatblock"){
+    if(p.kind==="worldsettings"){
+      p.mesh.rotation.y+=dt*0.4;
+    } else if(p.kind==="repeatblock"){
       p.timer-=dt;
       if(p.timer<=0){ p.timer=p.interval||3; if(p.code) runSkriptCode(p.code); }
       p.mesh.scale.setScalar(1+0.08*Math.sin(now*0.005+p.mesh.id));
@@ -1000,7 +1142,114 @@ function closeNoteEditor(){
   skriptEditorOpen=false;
   $("#note-editor").classList.remove("on");
 }
+let editingSettingsBlock=null;
+function openSettingsEditor(block){
+  editingSettingsBlock=block;
+  $("#set-fog-val").textContent=Math.round(THEMES[currentTheme].fogFar);
+  $("#set-fog").value=THEMES[currentTheme].fogFar;
+  $("#set-grav-val").textContent=Math.round(GRAV);
+  $("#set-grav").value=GRAV;
+  $("#set-speed-val").textContent=worldSpeed.toFixed(1);
+  $("#set-speed").value=worldSpeed;
+  $("#set-theme").value=currentTheme;
+  $("#set-freeze").textContent=creaturesFrozen?"Unfreeze Animals":"Freeze Animals";
+  $("#set-time").value=timeOfDay;
+  updateTimeLabel();
+  $("#set-water").value=Math.round(WATER_Y_FRAC*100);
+  $("#set-water-val").textContent=Math.round(WATER_Y_FRAC*100);
+  $("#set-brush-size").value=brushSize; $("#set-brush-size-val").textContent=brushSize;
+  $("#set-brush-str").value=brushStr; $("#set-brush-str-val").textContent=brushStr;
+  $("#set-pspeed").value=SPEED; $("#set-pspeed-val").textContent=SPEED;
+  $("#set-jump").value=JUMP; $("#set-jump-val").textContent=JUMP;
+  $("#set-sky-cycle").textContent="Cycle Sky Colors: "+(skyCycling?"ON":"OFF");
+  $("#set-fov").value=camera?camera.fov:75;
+  $("#set-fov-val").textContent=camera?Math.round(camera.fov):75;
+  freeMouse=true;
+  if(locked) document.exitPointerLock();
+  skriptEditorOpen=true;
+  $("#settings-editor").classList.add("on");
+  updateBadges();
+}
+function closeSettingsEditor(){
+  editingSettingsBlock=null;
+  skriptEditorOpen=false;
+  $("#settings-editor").classList.remove("on");
+}
+function buildTabernacle(){
+  const g=new THREE.Group();
+  const gold=new THREE.MeshStandardMaterial({color:0xD4AF37,flatShading:true,roughness:.5,metalness:.4});
+  const linen=new THREE.MeshStandardMaterial({color:0xF2E9D8,flatShading:true,roughness:.9});
+  const blue=new THREE.MeshStandardMaterial({color:0x1B3A6B,flatShading:true,roughness:.8});
+  const purple=new THREE.MeshStandardMaterial({color:0x4A1F6B,flatShading:true,roughness:.8});
+  const scarlet=new THREE.MeshStandardMaterial({color:0x8B1A1A,flatShading:true,roughness:.8});
+  const bronze=new THREE.MeshStandardMaterial({color:0x6B4A2E,flatShading:true,roughness:.6,metalness:.3});
+
+  // courtyard fence: bronze pillars around a rectangle
+  const W=14, D=7, H=2.2;
+  for(let i=0;i<=12;i++){
+    const x=-W/2+i*(W/12);
+    [D/2,-D/2].forEach(z=>{
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,H,6),bronze);
+      post.position.set(x,H/2,z); g.add(post);
+    });
+  }
+  for(let i=0;i<=6;i++){
+    const z=-D/2+i*(D/6);
+    [W/2,-W/2].forEach(x=>{
+      const post=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,H,6),bronze);
+      post.position.set(x,H/2,z); g.add(post);
+    });
+  }
+
+  // the tent itself: linen walls, blue/purple/scarlet roof band, gold-capped frame pillars
+  const tentW=5, tentD=3.2, tentH=2.6;
+  const wallGeo=new THREE.BoxGeometry(tentW,tentH,0.15);
+  const wallBack=new THREE.Mesh(wallGeo,linen); wallBack.position.set(0,tentH/2,-tentD/2); g.add(wallBack);
+  const sideGeo=new THREE.BoxGeometry(0.15,tentH,tentD);
+  const wallL=new THREE.Mesh(sideGeo,linen); wallL.position.set(-tentW/2,tentH/2,0); g.add(wallL);
+  const wallR=new THREE.Mesh(sideGeo,linen); wallR.position.set(tentW/2,tentH/2,0); g.add(wallR);
+
+  const roofGeo=new THREE.BoxGeometry(tentW+0.3,0.35,tentD+0.3);
+  const roofScarlet=new THREE.Mesh(roofGeo,scarlet); roofScarlet.position.set(0,tentH+0.18,0); g.add(roofScarlet);
+  const roofPurple=new THREE.Mesh(new THREE.BoxGeometry(tentW+0.1,0.3,tentD+0.1),purple);
+  roofPurple.position.set(0,tentH+0.5,0); g.add(roofPurple);
+  const roofBlue=new THREE.Mesh(new THREE.BoxGeometry(tentW-0.1,0.28,tentD-0.1),blue);
+  roofBlue.position.set(0,tentH+0.78,0); g.add(roofBlue);
+
+  // gold-capped pillars flanking the entrance
+  for(let i=0;i<4;i++){
+    const x=-tentW/2+0.6+i*((tentW-1.2)/3);
+    const pillar=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,tentH,8),gold);
+    pillar.position.set(x,tentH/2,tentD/2); g.add(pillar);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),gold);
+    cap.position.set(x,tentH,tentD/2); g.add(cap);
+  }
+
+  // the Ark, inside at the back
+  const arkBody=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.5,0.55),gold);
+  arkBody.position.set(0,0.55,-tentD/2+0.7); g.add(arkBody);
+  const arkLid=new THREE.Mesh(new THREE.BoxGeometry(0.95,0.1,0.6),gold);
+  arkLid.position.set(0,0.83,-tentD/2+0.7); g.add(arkLid);
+  const cherubGeo=new THREE.ConeGeometry(0.1,0.3,6);
+  const cherubL=new THREE.Mesh(cherubGeo,gold); cherubL.position.set(-0.25,1.0,-tentD/2+0.7); g.add(cherubL);
+  const cherubR=new THREE.Mesh(cherubGeo,gold); cherubR.position.set(0.25,1.0,-tentD/2+0.7); g.add(cherubR);
+
+  return g;
+}
+
 function runSkriptCode(code){
+  const realCode=code.split("\n").filter(l=>!l.trim().startsWith("//")).join("\n").trim();
+  if(realCode.toLowerCase()==="tabernacle"){
+    const tab=buildTabernacle();
+    const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+    tab.position.copy(player.pos).addScaledVector(dir,10);
+    tab.position.y=sampleHeight(tab.position.x,tab.position.z);
+    tab.rotation.y=player.yaw;
+    scene.add(tab);
+    $("#skript-output").textContent="→ the tabernacle is raised";
+    sndSkriptOk();
+    return;
+  }
   try{
     const result=eval(code);
     $("#skript-output").textContent = result===undefined ? "(ran - no return value)" : "→ "+String(result);
@@ -1558,17 +1807,21 @@ function detonate(point){
 }
 function explodeSquare(point, dig){
   if(dig) sndImplode(); else sndExplode();
-  // hard-edged square, pushes toward floor (dig) or ceiling (raise); strength controls how far
+  // levels the whole square to one flat height - a real mesa (raise) or dip (lower),
+  // not a partial per-cell push that would leave the surface uneven
   const cgx=worldToGridX(point.x), cgz=worldToGridZ(point.z), r=brushSize;
   const x0=clamp(Math.floor(cgx-r),0,GW-1), x1=clamp(Math.ceil(cgx+r),0,GW-1);
   const z0=clamp(Math.floor(cgz-r),0,GH-1), z1=clamp(Math.ceil(cgz+r),0,GH-1);
-  const f=clamp(brushStr/100,0,1);
+  let sum=0,count=0;
   for(let gz=z0;gz<=z1;gz++){
-    for(let gx=x0;gx<=x1;gx++){
-      const i=gz*GW+gx;
-      const target = dig ? 0 : HEIGHT_SCALE;
-      heights[i] = heights[i] + (target-heights[i])*f;
-    }
+    for(let gx=x0;gx<=x1;gx++){ sum+=heights[gz*GW+gx]; count++; }
+  }
+  const avg=count?sum/count:0;
+  const extreme=dig?0:HEIGHT_SCALE;
+  const f=clamp(brushStr/100,0,1);
+  const flatTarget=avg+(extreme-avg)*f;
+  for(let gz=z0;gz<=z1;gz++){
+    for(let gx=x0;gx<=x1;gx++) heights[gz*GW+gx]=flatTarget;
   }
   refreshTerrain();
   for(const p of props){
@@ -1700,6 +1953,7 @@ function stepPellets(dt){
     if(!hit){
       for(let j=props.length-1;j>=0;j--){
         const p=props[j];
+        if(p.indestructible) continue;
         if(b.mesh.position.distanceTo(p.mesh.position) < p.radius+0.4){
           scene.remove(p.mesh); p.mesh.geometry.dispose();
           if(p.mesh.material.dispose) p.mesh.material.dispose();
@@ -1896,12 +2150,16 @@ addEventListener("mousedown",e=>{
     const mode=curVariant().id;
     const existing=pickSkriptBlock();
     if(existing){
-      if(existing.kind==="noteblock") openNoteEditor(existing); else openSkriptEditor(existing);
+      if(existing.kind==="noteblock") openNoteEditor(existing);
+      else if(existing.kind==="worldsettings") openSettingsEditor(existing);
+      else openSkriptEditor(existing);
     } else{
       const hit=raycastTerrain();
       if(hit){
         const block=placeSkriptBlock(mode,hit.point);
-        if(block.kind==="noteblock") openNoteEditor(block); else openSkriptEditor(block);
+        if(block.kind==="noteblock") openNoteEditor(block);
+        else if(block.kind==="worldsettings") openSettingsEditor(block);
+        else openSkriptEditor(block);
       }
     }
   } else if(tool==="shapes"){
@@ -1940,6 +2198,13 @@ document.querySelector("#brand-hud").addEventListener("click",()=>{
   $("#launcher").style.display="flex";
 });
 $("#btn-export").addEventListener("click",exportPNG);
+$("#btn-invert-live").addEventListener("click", ()=>{
+  if(!heights) return;
+  pushUndo();
+  for(let i=0;i<heights.length;i++) heights[i]=HEIGHT_SCALE-heights[i];
+  refreshTerrain();
+  toast("Heightmap inverted");
+});
 $("#skript-run").addEventListener("click",()=>{
   if(!editingBlock) return;
   editingBlock.code=$("#skript-code").value;
@@ -1969,6 +2234,82 @@ $("#note-next").addEventListener("click",()=>{
 });
 $("#note-close").addEventListener("click",closeNoteEditor);
 $("#note-x").addEventListener("click",closeNoteEditor);
+
+$("#set-freeze").addEventListener("click",()=>{
+  creaturesFrozen=!creaturesFrozen;
+  $("#set-freeze").textContent=creaturesFrozen?"Unfreeze Animals":"Freeze Animals";
+  toast(creaturesFrozen?"Animals frozen":"Animals unfrozen");
+});
+$("#set-sky").addEventListener("input",e=>{
+  const col=new THREE.Color(e.target.value);
+  if(scene){ scene.background=col; if(scene.fog) scene.fog.color=col; }
+});
+$("#set-theme").addEventListener("change",e=>{ applyTheme(e.target.value); });
+$("#set-fog").addEventListener("input",e=>{
+  const v=+e.target.value;
+  $("#set-fog-val").textContent=v;
+  if(scene&&scene.fog) scene.fog.far=v;
+});
+$("#set-grav").addEventListener("input",e=>{
+  GRAV=+e.target.value;
+  $("#set-grav-val").textContent=GRAV;
+});
+$("#set-speed").addEventListener("input",e=>{
+  worldSpeed=+e.target.value;
+  $("#set-speed-val").textContent=worldSpeed.toFixed(1);
+});
+$("#set-delete-blocks").addEventListener("click",()=>{
+  for(let i=props.length-1;i>=0;i--){
+    const p=props[i];
+    if(p.kind==="box"||p.kind==="ball"||p.kind==="cyl"||p.kind==="cone"||p.kind==="plate"){
+      scene.remove(p.mesh); props.splice(i,1);
+    }
+  }
+  toast("All shapes deleted");
+});
+$("#set-delete-creatures").addEventListener("click",()=>{
+  for(const c of creatures) scene.remove(c.group);
+  creatures.length=0;
+  toast("All creatures deleted");
+});
+$("#set-delete-self").addEventListener("click",()=>{
+  if(!editingSettingsBlock) return;
+  scene.remove(editingSettingsBlock.mesh);
+  const idx=props.indexOf(editingSettingsBlock);
+  if(idx>=0) props.splice(idx,1);
+  closeSettingsEditor();
+  toast("World Settings block removed");
+});
+$("#settings-close").addEventListener("click",closeSettingsEditor);
+$("#settings-x").addEventListener("click",closeSettingsEditor);
+$("#set-time").addEventListener("input",e=>{ setTimeOfDay(+e.target.value); updateTimeLabel(); });
+$("#set-water").addEventListener("input",e=>{
+  const v=+e.target.value;
+  $("#set-water-val").textContent=v;
+  WATER_Y_FRAC=v/100;
+  if(waterOn&&waterMesh) waterMesh.position.y=waterLevel();
+});
+$("#set-brush-size").addEventListener("input",e=>{
+  brushSize=+e.target.value; $("#set-brush-size-val").textContent=brushSize; syncSliders();
+});
+$("#set-brush-str").addEventListener("input",e=>{
+  brushStr=+e.target.value; $("#set-brush-str-val").textContent=brushStr; syncSliders();
+});
+$("#set-pspeed").addEventListener("input",e=>{
+  SPEED=+e.target.value; $("#set-pspeed-val").textContent=SPEED;
+});
+$("#set-jump").addEventListener("input",e=>{
+  JUMP=+e.target.value; $("#set-jump-val").textContent=JUMP;
+});
+$("#set-sky-cycle").addEventListener("click",()=>{
+  skyCycling=!skyCycling;
+  $("#set-sky-cycle").textContent="Cycle Sky Colors: "+(skyCycling?"ON":"OFF");
+});
+$("#set-fov").addEventListener("input",e=>{
+  const v=+e.target.value;
+  $("#set-fov-val").textContent=v;
+  if(camera){ camera.fov=v; camera.updateProjectionMatrix(); }
+});
 document.querySelectorAll(".theme-btn[data-theme]").forEach(b=>{
   b.addEventListener("click",()=>{ applyTheme(b.dataset.theme); toast(b.dataset.theme.toUpperCase()+" theme"); });
 });
@@ -2019,8 +2360,9 @@ function tick(now){
   if(!running||!terrainMesh) return;
 
   const controlsActive = (locked || freeMouse) && !skriptEditorOpen;
+  const wdt=dt*worldSpeed;
 
-  stepCreatures(dt,now);
+  if(!creaturesFrozen) stepCreatures(wdt,now);
 
   if(controlsActive){
     fwd.set(-Math.sin(player.yaw),0,-Math.cos(player.yaw));
@@ -2082,8 +2424,8 @@ function tick(now){
     }
   }
 
-  stepProps(dt);
-  stepParticles(dt);
+  stepProps(wdt);
+  stepParticles(wdt);
   stepPellets(dt);
   stepSkriptBlocks(dt);
 
@@ -2097,6 +2439,13 @@ function tick(now){
   camera.rotation.order="YXZ";
   camera.rotation.y=player.yaw;
   camera.rotation.x=player.pitch;
+
+  if(skyCycling){
+    skyCycleHue=(skyCycleHue+dt*0.03)%1;
+    const col=new THREE.Color().setHSL(skyCycleHue,0.6,0.65);
+    scene.background=col;
+    if(scene.fog) scene.fog.color=col;
+  }
 
   renderer.render(scene,camera);
 }
